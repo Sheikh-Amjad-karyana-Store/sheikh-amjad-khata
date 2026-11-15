@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Sheikh Amjad Karyana Store | Khata</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <section id="login" class="login hidden">
+    <form id="loginForm" class="login-box">
+      <h1>Sheikh Amjad Karyana Store</h1>
+      <p class="muted">Customer khata. Please sign in.</p>
+      <label>Email <input type="email" name="email" required autocomplete="username"></label>
+      <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+      <p id="loginError" class="error"></p>
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <strong>Sheikh Amjad Karyana Store</strong>
+      <span class="grow"></span>
+      <span id="backupInfo" class="muted small-text"></span>
+      <span id="whoami" class="muted"></span>
+      <button id="backupBtn" class="btn small">Download Excel backup</button>
+      <button id="logoutBtn" class="btn small">Sign out</button>
+    </header>
+
+    <main id="main">
+      <section id="stats" class="stats"></section>
+
+      <div class="layout">
+        <aside class="list-pane">
+          <div class="toolbar">
+            <input id="search" type="search" placeholder="Search by name or phone">
+            <button id="addCustomerBtn" class="btn primary">Add customer</button>
+          </div>
+          <div class="chips" id="filters">
+            <button data-f="all" class="chip active">All</button>
+            <button data-f="owe" class="chip">Pending</button>
+            <button data-f="adv" class="chip">Advance</button>
+            <button data-f="clear" class="chip">Clear</button>
+          </div>
+          <div id="customerList"></div>
+        </aside>
+
+        <section id="detail" class="detail-pane"></section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared popup used for all forms -->
+  <dialog id="dlg">
+    <form id="mForm">
+      <h2 id="mTitle"></h2>
+      <div id="mBody"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="mCancel">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Backup gate: cannot be closed until the backup is downloaded -->
+  <dialog id="backupDlg">
+    <h2>Backup required</h2>
+    <p id="backupMsg"></p>
+    <p class="muted">The Excel file keeps every customer, every entry and every pending amount. Save it in a safe place.</p>
+    <div class="actions">
+      <button type="button" class="btn" id="gateLogoutBtn">Sign out</button>
+      <button type="button" class="btn primary" id="gateBackupBtn">Download Excel backup</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
