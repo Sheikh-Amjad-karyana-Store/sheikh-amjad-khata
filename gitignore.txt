@@ -1,0 +1,5 @@
+*.xlsx
+*.csv
+*.json
+khata-backup*
+.DS_Store
