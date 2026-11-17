@@ -278,8 +278,8 @@ $("#detail").onclick = async (e) => {
   }
 };
 
-/* ---------- Backup (Excel) and the 5 day reminder ---------- */
-const BACKUP_EVERY_DAYS = 5;
+/* ---------- Backup (Excel) and the 2 day reminder ---------- */
+const BACKUP_EVERY_DAYS = 2;
 const bdlg = $("#backupDlg");
 let lastBackup = null;                         // { created_at, by_user } from the backup_log table
 
