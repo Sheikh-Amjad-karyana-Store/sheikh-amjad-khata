@@ -86,3 +86,5 @@ dialog h2{margin-top:0}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 
 .small-text{font-size:.85rem}
+.dup-hint{background:var(--owe-bg);color:var(--owe);padding:.5rem .75rem;border-radius:8px;margin:-.4rem 0 .9rem;font-size:.9rem}
+.dup-hint:empty{display:none}
