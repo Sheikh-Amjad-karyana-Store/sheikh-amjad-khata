@@ -51,3 +51,7 @@ create table backup_log (
 alter table backup_log enable row level security;
 create policy "staff read" on backup_log for select to authenticated using (true);
 create policy "staff add"  on backup_log for insert to authenticated with check (true);
+
+-- Stops the same customer name (ignoring capitals and extra spaces) from being saved twice.
+create unique index customers_name_unique
+on customers (lower(regexp_replace(trim(name), '\s+', ' ', 'g')));

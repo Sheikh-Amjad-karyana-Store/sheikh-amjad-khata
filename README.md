@@ -10,13 +10,15 @@ Customer credit (udhaar) ledger for a grocery shop. Original design, built from 
 - Search by name or phone, filters for Pending, Advance and Clear
 - Dashboard with total receivable and customer counts
 - Two logins. Every entry shows who added or edited it
-- Excel backup with filters, and a reminder every 5 days
+- Duplicate customer check (same name is blocked, similar name or same phone asks first)
+- Excel backup with filters, and a reminder every 2 days
 
 ## Setup
 1. Create a Supabase project and run `setup.sql` in the SQL Editor.
 2. Turn off public sign ups and create the two users in Authentication.
 3. Put the Project URL and publishable key in `js/config.js`.
-4. Open the site through a local server or GitHub Pages. Opening `index.html` by double click will not work.
+4. Optional if you already ran setup.sql before the duplicate check was added: run update_duplicates.sql step by step.
+5. Open the site through a local server or GitHub Pages. Opening `index.html` by double click will not work.
 
 Never put a Supabase `secret` or `service_role` key in this repo. Never upload backup files here.
 
@@ -24,4 +26,4 @@ Never put a Supabase `secret` or `service_role` key in this repo. Never upload b
 Sohaib Younas, HU Digital
 - Portfolio: https://sohaibyounas076.github.io/portfolio/
 - GitHub: https://github.com/Sohaibyounas076/
-- for using free tools : utilvance.com
+- Free online tools: https://utilvance.com
