@@ -7,6 +7,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm";
 import { supabaseUrl, supabaseKey, USER_NAMES } from "./config.js";
 import { downloadBackup } from "./backup.js";
+import { digits, cleanName, nameKey, findMatches } from "./names.js";
 
 /* ---------- Helpers ---------- */
 const $ = (s) => document.querySelector(s);
@@ -14,7 +15,6 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = (n) => "Rs " + Math.abs(Number(n) || 0).toLocaleString("en-PK");
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-const digits = (s) => String(s || "").replace(/\D/g, "");
 const num = (v) => Math.max(0, Number(v) || 0);
 
 function toast(msg) {
@@ -112,9 +112,9 @@ function renderStats(bal) {
 }
 
 function renderList(bal) {
-  const q = query.trim().toLowerCase(), qd = digits(query);
+  const q = nameKey(query), qd = digits(query);
   const rows = customers
-    .filter((c) => !q || c.name.toLowerCase().includes(q) || (qd && digits(c.phone).includes(qd)))
+    .filter((c) => !q || nameKey(c.name).includes(q) || (qd && digits(c.phone).includes(qd)))
     .filter((c) => filter === "all" || state(bal[c.id] || 0) === filter)
     .sort((a, b) => (bal[b.id] || 0) - (bal[a.id] || 0));
   $("#customerList").innerHTML = rows.length
@@ -186,27 +186,64 @@ function openModal(title, body, onSave) {
 }
 $("#mCancel").onclick = () => dlg.close();
 
+const dbError = (error) =>
+  error.code === "23505" ? new Error("A customer with this name already exists.") : error;
+
 function customerForm(c) {
   openModal(c ? "Edit customer" : "Add customer", `
-    <label>Name <input name="name" required value="${esc(c?.name)}"></label>
+    <label>Name <input name="name" required value="${esc(c?.name)}" autocomplete="off"></label>
+    <div id="dupHint" class="dup-hint"></div>
     <label>Phone <input name="phone" type="tel" value="${esc(c?.phone)}"></label>
     <label>Address <input name="address" value="${esc(c?.address)}"></label>`,
   async (f) => {
-    const data = { name: f.get("name").trim(), phone: f.get("phone").trim(), address: f.get("address").trim() };
+    const data = { name: cleanName(f.get("name")), phone: f.get("phone").trim(), address: cleanName(f.get("address")) };
     if (!data.name) throw new Error("Name is required");
+
+    // Duplicate check: same name is blocked, similar name or same phone asks first.
+    const m = findMatches(customers, data.name, data.phone, c?.id);
+    if (m.exact.length) {
+      const old = m.exact[0];
+      if (!c && confirm(`"${old.name}" is already in the list.\n\nPress OK to open that account instead.`)) {
+        selectedId = old.id; render(); return;
+      }
+      throw new Error("Not saved. If this is another person, add the area or a father's name to tell them apart.");
+    }
+    const maybe = [...new Set([...m.similar, ...m.samePhone])];
+    if (maybe.length && !confirm(
+      "A similar customer is already in the list:\n" +
+      maybe.slice(0, 4).map((x) => `- ${x.name}${x.phone ? " (" + x.phone + ")" : ""}`).join("\n") +
+      `\n\nIs this a different person? Press OK to ${c ? "save" : "add"} anyway.`)) {
+      throw new Error("Not saved");
+    }
+
     if (c) {
       const { error } = await sb.from("customers")
         .update({ ...data, edited_by: userName(), edited_at: new Date().toISOString() }).eq("id", c.id);
-      if (error) throw error;
+      if (error) throw dbError(error);
     } else {
       const { data: row, error } = await sb.from("customers")
         .insert({ ...data, created_by: userName() }).select().single();
-      if (error) throw error;
+      if (error) throw dbError(error);
       selectedId = String(row.id);
     }
     toast("Saved");
     await load();
   });
+
+  // Live hint while typing: shows customers that already look the same.
+  const nameInput = document.querySelector("#mForm [name=name]");
+  const phoneInput = document.querySelector("#mForm [name=phone]");
+  const hint = $("#dupHint");
+  const update = () => {
+    const m = findMatches(customers, nameInput.value, phoneInput.value, c?.id);
+    const list = [...new Set([...m.exact, ...m.similar, ...m.samePhone])].slice(0, 4);
+    hint.innerHTML = list.length
+      ? "<strong>Already in the list:</strong><br>" +
+        list.map((x) => esc(x.name) + (x.phone ? " (" + esc(x.phone) + ")" : "")).join("<br>")
+      : "";
+  };
+  nameInput.oninput = phoneInput.oninput = update;
+  update();
 }
 
 function txForm(kind, t) {
@@ -278,8 +315,8 @@ $("#detail").onclick = async (e) => {
   }
 };
 
-/* ---------- Backup (Excel) and the 2 day reminder ---------- */
-const BACKUP_EVERY_DAYS = 2;
+/* ---------- Backup (Excel) and the 5 day reminder ---------- */
+const BACKUP_EVERY_DAYS = 5;
 const bdlg = $("#backupDlg");
 let lastBackup = null;                         // { created_at, by_user } from the backup_log table
 
